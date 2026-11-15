@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#f8d7e7">
+<meta name="description" content="A gentle daily skincare, haircare, fitness and wellbeing checklist.">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<title>My Pink Daily Routine</title>
+<style>
+:root{--pink:#d85b91;--deep:#8f315d;--pale:#fff4f8;--line:#f1c9da;--ink:#4a3040;--muted:#8a6b7b}
+*{box-sizing:border-box}body{margin:0;background:linear-gradient(160deg,#fff8fb,#fce7f0);font:16px system-ui,-apple-system,Segoe UI,sans-serif;color:var(--ink)}
+main{max-width:650px;margin:auto;padding:22px 15px 48px}.hero{background:linear-gradient(135deg,#e987b2,#c94d85);color:white;border-radius:25px;padding:24px 21px;box-shadow:0 10px 28px #b84d7b30}
+.eyebrow{font-size:12px;letter-spacing:2px;text-transform:uppercase;opacity:.9}.hero h1{font-family:Georgia,serif;font-weight:500;font-size:32px;margin:8px 0}.hero p{margin:0;opacity:.95}
+.date{font-size:13px;margin-top:15px;opacity:.9}.progresscard,.section{background:#fff;border:1px solid var(--line);border-radius:20px;padding:17px;margin-top:15px;box-shadow:0 5px 18px #a84d7110}
+.progressrow{display:flex;justify-content:space-between;align-items:center;font-weight:700}.percent{color:var(--deep);font-size:23px} .bar{height:10px;background:#f8e3ec;border-radius:20px;overflow:hidden;margin:12px 0 5px}.fill{height:100%;width:0;background:linear-gradient(90deg,#e88ab4,#c94d85);border-radius:20px;transition:width .2s}
+.section h2{font-size:18px;margin:0;color:var(--deep)}.time{font-size:12px;color:var(--muted);margin:3px 0 12px}
+label.task{display:flex;gap:11px;align-items:flex-start;padding:10px 2px;border-top:1px solid #faedf2;line-height:1.35}
+input[type=checkbox]{accent-color:var(--pink);width:20px;height:20px;flex:none;margin:0}
+.task input:checked+span{text-decoration:line-through;color:#a98d9b}
+.note{font-size:13px;color:var(--muted);line-height:1.5}.actions{display:flex;gap:10px;margin-top:15px}.actions button{border:1px solid var(--line);background:white;color:var(--deep);padding:11px 14px;border-radius:13px;font-weight:650;flex:1}
+footer{text-align:center;color:var(--muted);font-size:12px;padding:20px}
+
+/* Weekly weight tracker */
+.weight-card{background:linear-gradient(135deg,#fff0f6,#fff9fc);border:1px solid #f4c5d8;border-radius:20px;padding:18px;margin:16px 0;box-shadow:0 6px 18px rgba(190,90,130,.08)}
+.weight-card h2{margin:0 0 8px;color:#a83f70}
+.weight-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:12px}
+.weight-stat{background:#fff;border-radius:14px;padding:12px}
+.weight-stat small{display:block;color:#8d7180;font-size:12px}
+.weight-stat strong{display:block;color:#963d69;font-size:20px;margin-top:3px}
+.weight-action{background:#d85b91;color:#fff;border:0;border-radius:999px;padding:11px 16px;font-weight:700;margin-top:12px;cursor:pointer}
+.weight-history{margin-top:12px;font-size:13px;color:#765665}
+.weight-history li{margin:6px 0}
+.weight-modal-backdrop{position:fixed;inset:0;background:rgba(65,32,48,.42);display:none;align-items:center;justify-content:center;padding:18px;z-index:9999}
+.weight-modal-backdrop.show{display:flex}
+.weight-modal{width:min(100%,390px);background:#fff8fb;border-radius:24px;padding:22px;box-shadow:0 18px 60px rgba(80,30,55,.25);color:#57384a}
+.weight-modal h2{color:#a83f70;margin:0 0 8px}
+.weight-modal input{width:100%;box-sizing:border-box;border:1px solid #e8b5cb;border-radius:13px;padding:13px;font-size:18px;background:#fff;margin:10px 0}
+.weight-modal .secondary{background:#f5dce7;color:#86435f;margin-left:7px}
+.weight-delta{font-weight:700}
+@media(max-width:360px){.weight-grid{grid-template-columns:1fr}}
+
+</style>
+</head>
+<body><main>
+<header class="hero"><div class="eyebrow">a gentle routine • one day at a time</div><h1>My Daily Routine ♡</h1><p>Little habits, steady progress. You don't have to be perfect.</p><div class="date" id="today"></div></header>
+<section class="progresscard"><div class="progressrow"><span>Today's progress</span><span class="percent" id="pct">0%</span></div><div class="bar"><div class="fill" id="fill"></div></div><div class="note" id="count">0 of 26 habits completed</div></section>
+<div id="sections"></div>
+<div class="actions"><button id="reset">Reset today's ticks</button><button onclick="window.print()">Print / Save PDF</button></div>
+<p class="note" style="text-align:center;margin-top:14px">Your ticks are saved in this browser for today. A fresh checklist starts automatically each new day.</p>
+<footer>Be kind to yourself. Consistency over perfection ♡</footer>
+</main>
+<script>
+const groups=[
+["🌸 Morning","7:30–8:45 AM",["Wake up and drink water","Wash face with a gentle cleanser","Apply moisturiser","Apply broad-spectrum SPF 30+ sunscreen","Eat 1 banana before the gym","Get ready and head to the gym"]],
+["🏋️ Gym & after","8:45–11:15 AM",["Complete strength workout or planned recovery","Do warm-up and comfortable cardio","Shower and change into fresh clothes","Eat 2 boiled eggs after the workout","Gently detangle hair if needed","Pack work essentials"]],
+["☀️ Workday & food","12:00–9:00 PM",["Eat lunch: rice and the hostel side dish","Have cucumber and carrot with lunch","Have curd with lunch if you want and can store it safely","Drink water regularly","Have a snack if hungry","Eat dinner; don't skip it"]],
+["🌷 Evening self-care","After work–11:15 PM",["Cleanse face gently and remove sunscreen","Apply moisturiser","Let sweaty hair/scalp dry; avoid tight hairstyles","Comb gently; avoid excessive heat","Keep comb and pillowcase clean","Prepare clothes, bag and gym essentials"]],
+["🌙 Sleep & reset","11:15 PM–7:30 AM",["Put phone away and wind down","Get into bed by 11:30 PM","Aim for 8 hours of sleep"]]
+];
+const total=groups.reduce((n,g)=>n+g[2].length,0), key='pinkRoutine-'+new Date().toLocaleDateString('en-CA');
+document.getElementById('today').textContent=new Date().toLocaleDateString(undefined,{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+let state={};try{state=JSON.parse(localStorage.getItem(key)||'{}')}catch(e){}
+const root=document.getElementById('sections');
+groups.forEach((g,i)=>{let sec=document.createElement('section');sec.className='section';let h=document.createElement('h2');h.textContent=g[0];sec.append(h);let t=document.createElement('div');t.className='time';t.textContent=g[1];sec.append(t);
+g[2].forEach((item,j)=>{let id=i+'-'+j,l=document.createElement('label');l.className='task';let c=document.createElement('input');c.type='checkbox';c.checked=!!state[id];let s=document.createElement('span');s.textContent=item;c.addEventListener('change',()=>{state[id]=c.checked;save()});l.append(c,s);sec.append(l)});root.append(sec)});
+function save(){localStorage.setItem(key,JSON.stringify(state));update()}
+function update(){let n=Object.values(state).filter(Boolean).length;document.getElementById('pct').textContent=Math.round(n/total*100)+'%';document.getElementById('fill').style.width=(n/total*100)+'%';document.getElementById('count').textContent=n+' of '+total+' habits completed'}
+document.getElementById('reset').addEventListener('click',()=>{if(confirm("Clear today's checkmarks?")){state={};save();document.querySelectorAll('input[type=checkbox]').forEach(c=>c.checked=false)}});
+update();
+if ("serviceWorker" in navigator) { window.addEventListener("load", () => navigator.serviceWorker.register("./sw.js")); }
+</script>
+<section class="weight-card" id="weightTracker">
+  <h2>♡ My Weight Journey</h2>
+  <p style="margin:0;color:#765665;font-size:14px">A gentle Monday check-in, one week at a time.</p>
+  <div class="weight-grid">
+    <div class="weight-stat"><small>Latest weight</small><strong id="latestWeight">73.95 kg</strong></div>
+    <div class="weight-stat"><small>Since last check-in</small><strong id="weightChange">—</strong></div>
+    <div class="weight-stat"><small>To your 55 kg goal</small><strong id="remainingWeight">18.95 kg</strong></div>
+    <div class="weight-stat"><small>Progress to goal</small><strong id="goalProgress">0%</strong></div>
+  </div>
+  <div id="weightChart" style="margin-top:14px"></div>
+  <button class="weight-action" type="button" id="addWeightBtn">＋ Add / update weight</button>
+  <div class="weight-history" id="weightHistory">Your Monday entries will appear here.</div>
+</section>
+
+<div class="weight-modal-backdrop" id="weightModal" role="dialog" aria-modal="true" aria-labelledby="weightModalTitle">
+  <div class="weight-modal">
+    <h2 id="weightModalTitle">Monday weigh-in 💗</h2>
+    <p id="weightModalText">Take a moment to check in. Progress is about the trend, not one number.</p>
+    <label for="weightInput">Today's weight (kg)</label>
+    <input id="weightInput" type="number" inputmode="decimal" min="20" max="300" step="0.01" placeholder="e.g. 73.5">
+    <div id="weightModalFeedback" style="font-size:13px;color:#765665;min-height:18px"></div>
+    <button class="weight-action" type="button" id="saveWeightBtn">Save my weight</button>
+    <button class="weight-action secondary" type="button" id="closeWeightBtn">Maybe later</button>
+  </div>
+</div>
+
+
+<script>
+(() => {
+  const KEY = "pinkRoutineWeightHistory";
+  const START = 73.95;
+  const GOAL = 55;
+  const $ = id => document.getElementById(id);
+  const read = () => { try { return JSON.parse(localStorage.getItem(KEY) || "[]"); } catch(e) { return []; } };
+  const write = rows => localStorage.setItem(KEY, JSON.stringify(rows));
+  const dateKey = d => {
+    const y=d.getFullYear(), m=String(d.getMonth()+1).padStart(2,"0"), day=String(d.getDate()).padStart(2,"0");
+    return `${y}-${m}-${day}`;
+  };
+  const fmt = n => `${Number(n).toFixed(2)} kg`;
+  function render() {
+    const rows = read().sort((a,b)=>a.date.localeCompare(b.date));
+    const latest = rows.length ? rows[rows.length-1].weight : START;
+    const previous = rows.length > 1 ? rows[rows.length-2].weight : START;
+    const delta = latest - previous;
+    $("latestWeight").textContent = fmt(latest);
+    $("weightChange").textContent = rows.length ? `${delta > 0 ? "+" : ""}${delta.toFixed(2)} kg` : "First check-in";
+    $("weightChange").className = "weight-delta";
+    const remaining = Math.max(0, latest-GOAL);
+    $("remainingWeight").textContent = fmt(remaining);
+    const totalToLose = START-GOAL;
+    const progress = Math.max(0,Math.min(100,((START-latest)/totalToLose)*100));
+    $("goalProgress").textContent = `${progress.toFixed(0)}%`;
+    const chartRows = rows.slice(-8);
+    if (chartRows.length >= 2) {
+      const vals = chartRows.map(r=>r.weight), minV=Math.min(...vals)-0.5, maxV=Math.max(...vals)+0.5;
+      const points = vals.map((v,i)=>`${12+i*(276/(vals.length-1))},${88-((v-minV)/(maxV-minV||1))*68}`).join(" ");
+      $("weightChart").innerHTML = `<div style="font-size:12px;color:#8d7180;margin-bottom:5px">Your weight trend</div><svg viewBox="0 0 300 104" width="100%" role="img" aria-label="Weight trend chart"><line x1="10" y1="90" x2="290" y2="90" stroke="#f0c7d8"/><polyline points="${points}" fill="none" stroke="#d85b91" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>${points.split(" ").map(pt=>{const [x,y]=pt.split(",");return `<circle cx="${x}" cy="${y}" r="4" fill="#d85b91"/>`;}).join("")}</svg>`;
+    } else {
+      $("weightChart").innerHTML = `<div style="font-size:12px;color:#987b89;margin-top:12px">${chartRows.length ? "Add another weekly check-in to see your trend chart." : "Your trend chart will appear after two weigh-ins."}</div>`;
+    }
+    const history = rows.slice().reverse().slice(0,8);
+    $("weightHistory").innerHTML = history.length
+      ? "<strong>Recent check-ins</strong><ol>" + history.map((r,i) => {
+          const prev = rows[rows.findIndex(x=>x.date===r.date)-1];
+          const diff = prev ? r.weight-prev.weight : r.weight-START;
+          const sign = diff>0?"+":"";
+          return `<li>${r.date}: <strong>${r.weight.toFixed(2)} kg</strong> <span>(${sign}${diff.toFixed(2)} kg)</span></li>`;
+        }).join("") + "</ol>"
+      : "No weigh-ins yet. Your first saved entry will start your history.";
+  }
+  function openModal() {
+    $("weightInput").value = "";
+    $("weightModal").classList.add("show");
+    setTimeout(()=>$("weightInput").focus(),100);
+  }
+  function closeModal() { $("weightModal").classList.remove("show"); }
+  $("addWeightBtn").addEventListener("click",openModal);
+  $("closeWeightBtn").addEventListener("click",closeModal);
+  $("saveWeightBtn").addEventListener("click",() => {
+    const value = Number($("weightInput").value);
+    if (!Number.isFinite(value) || value < 20 || value > 300) {
+      $("weightModalFeedback").textContent = "Please enter a valid weight in kg.";
+      return;
+    }
+    const rows = read();
+    const today = dateKey(new Date());
+    const existing = rows.findIndex(r=>r.date===today);
+    if(existing>=0) rows[existing].weight = value;
+    else rows.push({date:today,weight:value});
+    rows.sort((a,b)=>a.date.localeCompare(b.date));
+    write(rows);
+    localStorage.setItem("pinkRoutineLastMondayPrompt", today);
+    render();
+    closeModal();
+  });
+  render();
+  const now = new Date();
+  const lastPrompt = localStorage.getItem("pinkRoutineLastMondayPrompt");
+  if (now.getDay()===1 && lastPrompt !== dateKey(now)) {
+    setTimeout(openModal,700);
+  }
+})();
+</script>
+
+</body></html>
